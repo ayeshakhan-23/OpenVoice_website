@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ============================================================
+     Open Voice Portal — M.H. Saboo Siddik College of Engineering
+     Single-file app.  Firebase JS SDK v10 (ESM via CDN).
+     ============================================================ -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Open Voice — MHSSCE</title>
+
+<!-- Fonts: Bebas Neue (display) + DM Sans (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet"/>
+
+<style>
+/* =====================================================================
+   CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ===================================================================== */
+:root {
+  /* ── palette ── */
+  --bg-deepest:   #080e18;
+  --bg-deep:      #0d1420;
+  --bg-card:      #111c2e;
+  --bg-card-hi:   #162538;
+  --border:       rgba(255,255,255,0.07);
+  --border-hi:    rgba(255,255,255,0.13);
+
+  --gold:         #e8a838;
+  --gold-glow:    rgba(232,168,56,.22);
+  --gold-dim:     rgba(232,168,56,.10);
+
+  --emerald:      #34d399;
+  --emerald-dim:  rgba(52,211,153,.10);
+  --rose:         #fb7185;
+  --rose-dim:     rgba(251,113,133,.10);
+  --sky:          #60a5fa;
+  --sky-dim:      rgba(96,165,250,.10);
+  --violet:       #a78bfa;
+  --violet-dim:   rgba(167,139,250,.10);
+  --amber:        #fbbf24;
+  --amber-dim:    rgba(251,191,36,.10);
+
+  --text-1:       #f1f5f9;
+  --text-2:       #94a3b8;
+  --text-3:       #64748b;
+
+  /* ── spacing / shape ── */
+  --r:            10px;
+  --r-sm:         6px;
+  --r-lg:         16px;
+  --r-xl:         22px;
+
+  /* ── fonts ── */
+  --ff-display:   'Bebas Neue', sans-serif;
+  --ff-body:      'DM Sans', sans-serif;
+}
+
+/* =====================================================================
+   RESET
+   ===================================================================== */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family: var(--ff-body);
+  background: var(--bg-deepest);
+  color: var(--text-1);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a{ text-decoration:none; color:inherit; }
+button{ font-family:inherit; }
+img{ display:block; max-width:100%; }
+
+/* =====================================================================
+   AMBIENT BACKGROUND
+   ===================================================================== */
+.ambient{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+/* grid lines */
+.ambient::before{
+  content:'';
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 80%);
+}
+/* floating colour orbs */
+.orb{
+  position:absolute; border-radius:50%;
+  filter: blur(140px);
+  animation: orbFloat 20s ease-in-out infinite alternate;
+}
+.orb-1{ width:520px; height:520px; background:var(--gold);     top:-200px; left:-180px; opacity:.15; }
+.orb-2{ width:380px; height:380px; background:var(--emerald);  bottom:-160px; right:-140px; opacity:.12; animation-delay:-7s; }
+.orb-3{ width:280px; height:280px; background:var(--sky);      top:50%; left:55%; opacity:.08; animation-delay:-14s; }
+@keyframes orbFloat{
+  0%  { transform: translate(0,0) scale(1); }
+  100%{ transform: translate(70px,-50px) scale(1.15); }
+}
+
+/* =====================================================================
+   HEADER
+   ===================================================================== */
+.header{
+  position:relative; z-index:20;
+  background: rgba(8,14,24,.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header__inner{
+  max-width:1140px; margin:0 auto;
+  padding:0 24px;
+  height:68px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+/* brand */
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand__pill{
+  height:38px; padding:0 18px;
+  border-radius:20px;
+  background: linear-gradient(135deg, var(--gold), #c88a2a);
+  display:flex; align-items:center; gap:8px;
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+.brand__pill--icon{ font-size:17px; }
+.brand__pill--txt{
+  font-family:var(--ff-display);
+  font-size:1.15rem; letter-spacing:2.5px;
+  color:var(--bg-deepest);
+}
+.brand__college{
+  font-size:.72rem; font-weight:600;
+  color:var(--text-3); letter-spacing:.8px; text-transform:uppercase;
+}
+/* nav tabs */
+.tabs{ display:flex; gap:4px; }
+.tab{
+  padding:8px 20px; border-radius:var(--r);
+  border:none; background:transparent;
+  color:var(--text-3); font-size:.84rem; font-weight:500;
+  cursor:pointer; transition:all .2s; position:relative;
+  letter-spacing:.3px;
+}
+.tab:hover{ color:var(--text-1); background:rgba(255,255,255,.04); }
+.tab--active{ color:var(--gold); background:var(--gold-dim); font-weight:600; }
+
+/* =====================================================================
+   PAGE SHELL
+   ===================================================================== */
+.page{
+  position:relative; z-index:1;
+  max-width:1140px; margin:0 auto;
+  padding:36px 24px 60px;
+  display:none;
+}
+.page--active{
+  display:block;
+  animation: fadeUp .38s cubic-bezier(.4,0,.2,1);
+}
+@keyframes fadeUp{ from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* =====================================================================
+   ██  DASHBOARD PAGE
+   ===================================================================== */
+
+/* ── hero banner ── */
+.hero{
+  position:relative; overflow:hidden;
+  background: linear-gradient(140deg, var(--bg-card) 0%, #152030 100%);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:42px 40px 36px;
+  margin-bottom:28px;
+}
+.hero::after{
+  content:'';
+  position:absolute; top:-80px; right:-80px;
+  width:280px; height:280px; border-radius:50%;
+  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 65%);
+  pointer-events:none;
+}
+.hero__badge{
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--gold-dim); border:1px solid rgba(232,168,56,.22);
+  border-radius:18px; padding:4px 13px; margin-bottom:14px;
+}
+.hero__badge--dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--gold); box-shadow:0 0 7px var(--gold);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.3} }
+.hero__badge--label{ font-size:.72rem; font-weight:700; color:var(--gold); letter-spacing:1.3px; text-transform:uppercase; }
+
+.hero h1{
+  font-family:var(--ff-display);
+  font-size:clamp(2rem,4.2vw,2.95rem);
+  letter-spacing:2px; line-height:1.1;
+  margin-bottom:10px;
+}
+.hero h1 em{ font-style:normal; color:var(--gold); }
+.hero p{ color:var(--text-2); font-size:.93rem; max-width:500px; }
+
+/* ── stat row ── */
+.stat-row{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:14px; margin-bottom:28px;
+}
+@media(max-width:680px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+
+.stat{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:20px 18px;
+  transition: transform .2s, box-shadow .2s;
+}
+.stat:hover{ transform:translateY(-2px); box-shadow:0 6px 30px rgba(0,0,0,.3); }
+.stat__icon{
+  width:36px; height:36px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; margin-bottom:10px;
+}
+.stat__icon--active   { background:var(--rose-dim); }
+.stat__icon--resolved { background:var(--emerald-dim); }
+.stat__icon--total    { background:var(--sky-dim); }
+.stat__icon--depts    { background:var(--violet-dim); }
+.stat__num{ font-family:var(--ff-display); font-size:2.1rem; letter-spacing:1px; line-height:1; }
+.stat__lbl{ font-size:.72rem; color:var(--text-3); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+/* ── section head + filter ── */
+.sec-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:12px;
+}
+.sec-head h2{
+  font-family:var(--ff-display);
+  font-size:1.5rem; letter-spacing:1.2px;
+}
+.sec-head h2 em{ font-style:normal; color:var(--gold); }
+
+.pills{ display:flex; gap:6px; flex-wrap:wrap; }
+.pill{
+  padding:5px 14px; border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--bg-card); color:var(--text-3);
+  font-size:.78rem; cursor:pointer;
+  transition:all .18s;
+}
+.pill:hover{ border-color:var(--gold); color:var(--text-1); }
+.pill--active{ background:var(--gold-dim); border-color:var(--gold); color:var(--gold); font-weight:600; }
+
+/* ── issue grid ── */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px,1fr));
+  gap:16px;
+}
+
+/* ── issue card ── */
+.card{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:22px 20px 18px;
+  position:relative; overflow:hidden;
+  transition: transform .22s, box-shadow .22s, border-color .22s;
+  animation: cardIn .4s cubic-bezier(.4,0,.2,1) both;
+}
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 36px rgba(0,0,0,.35);
+  border-color:var(--border-hi);
+}
+@keyframes cardIn{ from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+/* coloured left stripe driven by category */
+.card::before{
+  content:''; position:absolute;
+  left:0; top:0; bottom:0; width:4px;
+  border-radius:var(--r-lg) 0 0 var(--r-lg);
+  transition: background .3s;
+}
+.card[data-c="Facility"]::before   { background:var(--sky); }
+.card[data-c="Academic"]::before   { background:var(--violet); }
+.card[data-c="Safety"]::before     { background:var(--rose); }
+.card[data-c="Suggestion"]::before { background:var(--emerald); }
+.card[data-c="Other"]::before      { background:var(--amber); }
+
+/* top row: tags + time */
+.card__top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; gap:8px; flex-wrap:wrap; }
+.card__tags{ display:flex; gap:5px; flex-wrap:wrap; }
+.tag{
+  font-size:.69rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+  padding:3px 9px; border-radius:14px;
+}
+.tag--dept   { background:var(--sky-dim);    color:var(--sky);    }
+.tag--div    { background:var(--violet-dim); color:var(--violet); }
+.tag--year   { background:var(--gold-dim);   color:var(--gold);   }
+.tag--cat    { background:rgba(255,255,255,.05); color:var(--text-2); }
+
+.card__time{ font-size:.71rem; color:var(--text-3); white-space:nowrap; }
+
+/* description */
+.card__desc{ color:var(--text-2); font-size:.87rem; line-height:1.58; margin-bottom:16px; }
+
+/* footer row */
+.card__foot{ display:flex; align-items:center; justify-content:space-between; }
+.card__foot-time{ font-size:.72rem; color:var(--text-3); }
+
+/* resolve button */
+.btn-resolve{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 15px; border-radius:var(--r);
+  border:1px solid rgba(52,211,153,.28);
+  background:var(--emerald-dim); color:var(--emerald);
+  font-size:.80rem; font-weight:600; cursor:pointer;
+  transition:all .18s;
+}
+.btn-resolve:hover{ background:rgba(52,211,153,.20); box-shadow:0 0 16px rgba(52,211,153,.22); }
+.btn-resolve:active{ transform:scale(.96); }
+.btn-resolve:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-resolve__icon{ font-size:14px; }
+
+/* empty / loading */
+.empty{
+  text-align:center; padding:72px 20px;
+  color:var(--text-3);
+}
+.empty__icon{ font-size:48px; margin-bottom:14px; opacity:.4; }
+.empty p{ font-size:.9rem; }
+
+.spinner{
+  width:38px; height:38px; border-radius:50%;
+  border:3px solid var(--bg-card-hi);
+  border-top-color:var(--gold);
+  animation:spin .65s linear infinite;
+  margin:56px auto;
+}
+@keyframes spin{ to{transform:rotate(360deg)} }
+
+/* =====================================================================
+   ██  SUBMIT PAGE
+   ===================================================================== */
+.submit-layout{
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap:44px; align-items:start;
+}
+@media(max-width:820px){ .submit-layout{ grid-template-columns:1fr; } }
+
+/* ── left panel (info) ── */
+.info-panel h2{
+  font-family:var(--ff-display);
+  font-size:2.1rem; letter-spacing:1.5px; margin-bottom:10px;
+}
+.info-panel h2 em{ font-style:normal; color:var(--gold); }
+.info-panel > p{ color:var(--text-2); font-size:.92rem; margin-bottom:24px; }
+
+.info-list{ list-style:none; display:flex; flex-direction:column; gap:12px; }
+.info-list li{
+  display:flex; align-items:flex-start; gap:14px;
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:16px 18px;
+  transition: border-color .2s;
+}
+.info-list li:hover{ border-color:var(--border-hi); }
+.info-list .li-ico{
+  width:38px; height:38px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.li-ico--a{ background:var(--sky-dim); }
+.li-ico--b{ background:var(--emerald-dim); }
+.li-ico--c{ background:var(--gold-dim); }
+.info-list .li-copy strong{ display:block; font-size:.82rem; font-weight:600; color:var(--text-1); margin-bottom:2px; }
+.info-list .li-copy span{ font-size:.77rem; color:var(--text-3); }
+
+/* ── right panel (form card) ── */
+.form-card{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:34px 30px 30px;
+  box-shadow:0 8px 40px rgba(0,0,0,.28);
+}
+.form-card h3{
+  font-family:var(--ff-display);
+  font-size:1.4rem; letter-spacing:1.2px; margin-bottom:4px;
+}
+.form-card > p{ color:var(--text-3); font-size:.80rem; margin-bottom:24px; }
+
+/* form group */
+.fg{ margin-bottom:18px; }
+.fg label{
+  display:block; font-size:.73rem; font-weight:700;
+  color:var(--text-2); text-transform:uppercase; letter-spacing:1px;
+  margin-bottom:7px;
+}
+.fg select,
+.fg textarea{
+  width:100%; border-radius:var(--r);
+  border:1px solid var(--border);
+  background:var(--bg-deep); color:var(--text-1);
+  font-family:var(--ff-body); font-size:.90rem;
+  padding:11px 14px;
+  transition:border-color .2s, box-shadow .2s;
+  outline:none; appearance:none; -webkit-appearance:none;
+}
+.fg select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' fill='%2394a3b8'%3E%3Cpath d='M0 0l5.5 7L11 0z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 13px center;
+  padding-right:34px; cursor:pointer;
+}
+.fg select option{ background:var(--bg-deep); }
+.fg select:focus,
+.fg textarea:focus{ border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-dim); }
+.fg textarea{ resize:vertical; min-height:108px; }
+
+/* 3-col row */
+.row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media(max-width:480px){ .row3{ grid-template-columns:1fr; } }
+
+/* category pill selector */
+.cat-pills{ display:flex; gap:7px; flex-wrap:wrap; }
+.cat-pill{
+  padding:7px 15px; border-radius:18px;
+  border:1px solid var(--border);
+  background:var(--bg-deep); color:var(--text-2);
+  font-size:.80rem; cursor:pointer;
+  transition:all .18s; user-select:none;
+}
+.cat-pill:hover{ border-color:var(--gold); color:var(--text-1); }
+.cat-pill--on{ background:var(--gold-dim); border-color:var(--gold); color:var(--gold); font-weight:600; }
+
+/* submit button */
+.btn-submit{
+  width:100%; margin-top:22px; padding:13px;
+  border-radius:var(--r); border:none;
+  background: linear-gradient(135deg, var(--gold), #d49530);
+  color:var(--bg-deepest);
+  font-size:.93rem; font-weight:700;
+  cursor:pointer; transition:all .2s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  letter-spacing:.4px;
+}
+.btn-submit:hover{ box-shadow:0 0 26px var(--gold-glow); transform:translateY(-1px); }
+.btn-submit:active{ transform:translateY(0); }
+.btn-submit:disabled{ opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* =====================================================================
+   TOAST NOTIFICATION
+   ===================================================================== */
+.toast{
+  position:fixed; bottom:28px; left:50%;
+  transform: translateX(-50%) translateY(110px);
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:14px 24px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 8px 36px rgba(0,0,0,.4);
+  z-index:200; max-width:92vw;
+  transition:transform .36s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.toast--show{ transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast__ico{ font-size:20px; }
+.toast__txt{ font-size:.87rem; color:var(--text-1); }
+
+/* =====================================================================
+   FOOTER
+   ===================================================================== */
+.footer{
+  position:relative; z-index:1;
+  text-align:center; padding:28px 20px;
+  border-top:1px solid var(--border);
+  color:var(--text-3); font-size:.76rem;
+}
+.footer em{ font-style:normal; color:var(--gold); }
+
+/* =====================================================================
+   RESPONSIVE TWEAKS
+   ===================================================================== */
+@media(max-width:600px){
+  .header__inner{ padding:0 16px; }
+  .brand__college{ display:none; }
+  .tab{ padding:7px 13px; font-size:.80rem; }
+  .page{ padding:24px 16px 52px; }
+  .hero{ padding:28px 22px 24px; }
+  .form-card{ padding:24px 18px 22px; }
+  .submit-layout{ gap:28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ────────────── Ambient background ────────────── -->
+<div class="ambient"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="header">
+  <div class="header__inner">
+    <div class="brand">
+      <div class="brand__pill">
+        <span class="brand__pill--icon">🎓</span>
+        <span class="brand__pill--txt">OPENVOICE</span>
+      </div>
+      <span class="brand__college">M.H. Saboo Siddik College of Engg</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab tab--active" data-tab="dashboard">📊 Dashboard</button>
+      <button class="tab"             data-tab="submit"   >✏️&nbsp; Submit</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE  ▸  DASHBOARD
+     ═══════════════════════════════════════════════════ -->
+<section class="page page--active" id="pg-dashboard">
+
+  <!-- hero -->
+  <div class="hero">
+    <div class="hero__badge">
+      <div class="hero__badge--dot"></div>
+      <span class="hero__badge--label">Live Dashboard</span>
+    </div>
+    <h1>M.H. SABOO SIDDIK <em>CAMPUS VOICE</em></h1>
+    <p>Real‑time view of every active student issue &amp; suggestion across all departments.</p>
+  </div>
+
+  <!-- stats -->
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat__icon stat__icon--active">🔥</div>
+      <div class="stat__num" id="s-active">—</div>
+      <div class="stat__lbl">Active Issues</div>
+    </div>
+    <div class="stat">
+      <div class="stat__icon stat__icon--resolved">✅</div>
+      <div class="stat__num" id="s-resolved">—</div>
+      <div class="stat__lbl">Resolved</div>
+    </div>
+    <div class="stat">
+      <div class="stat__icon stat__icon--total">📦</div>
+      <div class="stat__num" id="s-total">—</div>
+      <div class="stat__lbl">Total</div>
+    </div>
+    <div class="stat">
+      <div class="stat__icon stat__icon--depts">🏛️</div>
+      <div class="stat__num">5</div>
+      <div class="stat__lbl">Departments</div>
+    </div>
+  </div>
+
+  <!-- filter + grid -->
+  <div class="sec-head">
+    <h2>Active <em>Issues</em></h2>
+    <div class="pills" id="filter-pills">
+      <button class="pill pill--active" data-f="All">All</button>
+      <button class="pill" data-f="Facility">🏗️ Facility</button>
+      <button class="pill" data-f="Academic">📚 Academic</button>
+      <button class="pill" data-f="Safety">⚠️ Safety</button>
+      <button class="pill" data-f="Suggestion">💡 Suggestion</button>
+      <button class="pill" data-f="Other">📎 Other</button>
+    </div>
+  </div>
+
+  <div id="issues-wrap">
+    <div class="spinner"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE  ▸  SUBMIT
+     ═══════════════════════════════════════════════════ -->
+<section class="page" id="pg-submit">
+  <div class="submit-layout">
+
+    <!-- left info -->
+    <aside class="info-panel">
+      <h2>RAISE YOUR <em>VOICE</em></h2>
+      <p>Every submission matters. Help make MHSSCE better — no account needed, ever.</p>
+      <ul class="info-list">
+        <li>
+          <div class="li-ico li-ico--a">🛡️</div>
+          <div class="li-copy">
+            <strong>Completely Anonymous</strong>
+            <span>Only your branch &amp; division are saved — never your name or roll number.</span>
+          </div>
+        </li>
+        <li>
+          <div class="li-ico li-ico--b">⚡</div>
+          <div class="li-copy">
+            <strong>Instant Live Update</strong>
+            <span>Your issue appears on the dashboard the moment you hit submit.</span>
+          </div>
+        </li>
+        <li>
+          <div class="li-ico li-ico--c">📌</div>
+          <div class="li-copy">
+            <strong>Administration Tracked</strong>
+            <span>Admins can mark issues as resolved directly from the dashboard.</span>
+          </div>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- right form -->
+    <div class="form-card">
+      <h3>NEW SUBMISSION</h3>
+      <p>Fill in every field below — your voice will be heard.</p>
+
+      <form id="form" novalidate>
+
+        <!-- row: dept · div · year -->
+        <div class="row3">
+          <div class="fg">
+            <label for="sel-dept">Department</label>
+            <select id="sel-dept">
+              <option value=""            disabled selected>Select</option>
+              <option value="AIML">AI &amp; ML</option>
+              <option value="CSE">CSE</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Mechanical">Mechanical</option>
+              <option value="Civil">Civil</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label for="sel-div">Division</label>
+            <select id="sel-div">
+              <option value=""  disabled selected>Select</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label for="sel-year">Year</label>
+            <select id="sel-year">
+              <option value=""       disabled selected>Select</option>
+              <option value="1st Year">1st Year</option>
+              <option value="2nd Year">2nd Year</option>
+              <option value="3rd Year">3rd Year</option>
+              <option value="4th Year">4th Year</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- category pills -->
+        <div class="fg">
+          <label>Category</label>
+          <div class="cat-pills" id="cat-pills">
+            <div class="cat-pill cat-pill--on" data-cat="Facility">🏗️ Facility</div>
+            <div class="cat-pill"              data-cat="Academic">📚 Academic</div>
+            <div class="cat-pill"              data-cat="Safety">⚠️ Safety</div>
+            <div class="cat-pill"              data-cat="Suggestion">💡 Suggestion</div>
+            <div class="cat-pill"              data-cat="Other">📎 Other</div>
+          </div>
+        </div>
+
+        <!-- description -->
+        <div class="fg">
+          <label for="txt-desc">Description</label>
+          <textarea id="txt-desc" placeholder="Describe the problem or write your suggestion…"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-sub">
+          <span>📤</span> Submit Issue
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- footer -->
+<footer class="footer">© 2025 <em>Open Voice Portal</em> — M.H. Saboo Siddik College of Engineering &nbsp;·&nbsp; Built for students, by students</footer>
+
+<!-- toast -->
+<div class="toast" id="toast">
+  <span class="toast__ico"></span>
+  <span class="toast__txt"></span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FIREBASE  +  APP  LOGIC
+     ─────────────────────────────────────────────────────────────────────────
+     Firebase JS SDK v10 is loaded via ESM <script type="module">.
+     ╔═══════════════════════════════════════════════════════════════════════╗
+     ║  ⬇️  PASTE YOUR OWN Firebase Web-App Config into `firebaseConfig`  ║
+     ║      Firebase Console ▸ Project Settings ▸ General ▸ Your apps     ║
+     ║      ▸ click  </>  ▸ copy the config object                        ║
+     ╚═══════════════════════════════════════════════════════════════════════╝
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.esm2.js";
+import { getFirestore, collection, addDoc,
+         onSnapshot, doc, updateDoc,
+         orderBy, query, where }                from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.esm2.js";
+
+/* ─── 🔧  YOUR FIREBASE CONFIG  ─────────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+// ── init ──
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const COL = "campus_issues";           // Firestore collection name
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+
+function showToast(msg, ok = true){
+  const t = $("toast");
+  t.className = "toast toast--show";
+  t.querySelector(".toast__ico").textContent = ok ? "✅" : "❌";
+  t.querySelector(".toast__txt").textContent = msg;
+  setTimeout(() => t.classList.remove("toast--show"), 3400);
+}
+
+function timeAgo(ts){
+  if(!ts) return "just now";
+  const s = (Date.now() - ts.toDate().getTime()) / 1000;
+  if(s < 60)    return "just now";
+  if(s < 3600)  return Math.floor(s/60)  + " min ago";
+  if(s < 86400) return Math.floor(s/3600)+ " hr ago";
+  return Math.floor(s/86400) + " d ago";
+}
+
+function escHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================
+//  TAB SWITCHING
+// ============================================================
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("tab--active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("page--active"));
+    btn.classList.add("tab--active");
+    $("pg-" + btn.dataset.tab).classList.add("page--active");
+  });
+});
+
+// ============================================================
+//  CATEGORY PILLS  (submit form)
+// ============================================================
+let chosenCat = "Facility";
+document.querySelectorAll(".cat-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("cat-pill--on"));
+    pill.classList.add("cat-pill--on");
+    chosenCat = pill.dataset.cat;
+  });
+});
+
+// ============================================================
+//  FILTER PILLS  (dashboard)
+// ============================================================
+let activeFilter = "All";
+document.querySelectorAll(".pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("pill--active"));
+    pill.classList.add("pill--active");
+    activeFilter = pill.dataset.f;
+    renderCards();
+  });
+});
+
+// ============================================================
+//  FIRESTORE  —  LIVE LISTENER  (onSnapshot)
+// ============================================================
+let allIssues = [];   // local cache fed by the live listener
+
+// Listen to ALL docs — we compute stats client-side
+onSnapshot(
+  query(collection(db, COL), orderBy("createdAt", "desc")),
+  snapshot => {
+    allIssues = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    computeStats();
+    renderCards();
+  },
+  err => {
+    console.error("Firestore listener error →", err);
+    $("issues-wrap").innerHTML =
+      '<div class="empty"><div class="empty__icon">⚠️</div><p>Could not connect to the database.<br/>Check your Firebase config.</p></div>';
+  }
+);
+
+// ── stats ──
+function computeStats(){
+  const active   = allIssues.filter(i => i.status === "active").length;
+  const resolved = allIssues.filter(i => i.status === "resolved").length;
+  $("s-active").textContent   = active;
+  $("s-resolved").textContent = resolved;
+  $("s-total").textContent    = active + resolved;
+}
+
+// ── render cards (only active, optionally filtered by category) ──
+function renderCards(){
+  let list = allIssues.filter(i => i.status === "active");
+  if(activeFilter !== "All") list = list.filter(i => i.category === activeFilter);
+
+  const wrap = $("issues-wrap");
+
+  if(!list.length){
+    wrap.innerHTML =
+      '<div class="empty"><div class="empty__icon">📭</div><p>No active issues in this category right now.</p></div>';
+    return;
+  }
+
+  wrap.innerHTML = '<div class="grid">' + list.map((issue, idx) => `
+    <div class="card" data-c="${issue.category}" style="animation-delay:${idx*0.04}s">
+      <div class="card__top">
+        <div class="card__tags">
+          <span class="tag tag--dept">${escHtml(issue.department)}</span>
+          <span class="tag tag--div">Div ${escHtml(issue.division)}</span>
+          <span class="tag tag--year">${escHtml(issue.year)}</span>
+          <span class="tag tag--cat">${escHtml(issue.category)}</span>
+        </div>
+      </div>
+      <p class="card__desc">${escHtml(issue.description)}</p>
+      <div class="card__foot">
+        <span class="card__foot-time">🕐 ${timeAgo(issue.createdAt)}</span>
+        <button class="btn-resolve" data-id="${issue.id}">
+          <span class="btn-resolve__icon">✔️</span> Resolve
+        </button>
+      </div>
+    </div>
+  `).join("") + '</div>';
+
+  // attach resolve handlers
+  wrap.querySelectorAll(".btn-resolve").forEach(btn => {
+    btn.addEventListener("click", () => resolveIssue(btn.dataset.id, btn));
+  });
+}
+
+// ============================================================
+//  RESOLVE  —  update Firestore doc
+// ============================================================
+async function resolveIssue(id, btn){
+  btn.disabled = true;
+  btn.innerHTML = '<span>…</span>';
+  try {
+    await updateDoc(doc(db, COL, id), {
+      status:     "resolved",
+      resolvedAt: new Date()
+    });
+    showToast("Issue has been resolved!");
+    // card disappears automatically because onSnapshot fires → re-render
+  } catch(e){
+    console.error(e);
+    showToast("Failed to resolve. Try again.", false);
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-resolve__icon">✔️</span> Resolve';
+  }
+}
+
+// ============================================================
+//  SUBMIT FORM
+// ============================================================
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const dept = $("sel-dept").value;
+  const div  = $("sel-div").value;
+  const year = $("sel-year").value;
+  const desc = $("txt-desc").value.trim();
+
+  // validate
+  if(!dept || !div || !year){
+    showToast("Please select Department, Division & Year.", false);
+    return;
+  }
+  if(desc.length < 10){
+    showToast("Description must be at least 10 characters.", false);
+    return;
+  }
+
+  const btn = $("btn-sub");
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Submitting…';
+
+  try {
+    await addDoc(collection(db, COL), {
+      department: dept,
+      division:   div,
+      year:       year,
+      category:   chosenCat,
+      description: desc,
+      status:     "active",
+      createdAt:  new Date(),
+      resolvedAt: null
+    });
+
+    showToast("Issue submitted! It is now live on the dashboard.");
+
+    // reset form
+    $("form").reset();
+    document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("cat-pill--on"));
+    document.querySelector('.cat-pill[data-cat="Facility"]').classList.add("cat-pill--on");
+    chosenCat = "Facility";
+
+  } catch(e){
+    console.error(e);
+    showToast("Could not submit. Check your connection.", false);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>📤</span> Submit Issue';
+});
+</script>
+</body>
+</html>
